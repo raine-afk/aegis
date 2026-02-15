@@ -13,6 +13,7 @@ import { PatternStore } from "./store"
 import { PatternExtractor } from "./extractor"
 import type { Finding } from "./types"
 import { Instance } from "../project/instance"
+import { SupervisorEvent, recordFindings } from "./event"
 import path from "path"
 
 const log = Log.create({ service: "supervisor" })
@@ -50,7 +51,17 @@ export namespace SupervisorHooks {
 
     middleware = new SupervisorMiddleware(store)
     initialized = true
-    log.info("supervisor initialized", { project, patterns: store.getPatterns().length })
+
+    const patternCount = store.getPatterns().length
+    log.info("supervisor initialized", { project, patterns: patternCount })
+
+    // Publish initial status
+    Bus.publish(SupervisorEvent.Status, {
+      enabled: true,
+      patternCount,
+      totalFindings: 0,
+      criticalCount: 0,
+    })
   }
 
   /**
@@ -76,7 +87,10 @@ export namespace SupervisorHooks {
         warnings: findings.filter((f) => f.severity === "warning").length,
       })
 
-      // Publish findings to bus for TUI consumption
+      // Record for session history
+      recordFindings(filePath, findings)
+
+      // Publish to bus for TUI consumption
       Bus.publish(SupervisorEvent.Finding, {
         file: filePath,
         findings,
@@ -100,14 +114,5 @@ export namespace SupervisorHooks {
    */
   export function clearFindings(): void {
     middleware?.clearFindings()
-  }
-
-  /**
-   * Bus events for supervisor notifications.
-   */
-  export const SupervisorEvent = {
-    Finding: "supervisor.finding" as const,
-    Status: "supervisor.status" as const,
-    Intervention: "supervisor.intervention" as const,
   }
 }
