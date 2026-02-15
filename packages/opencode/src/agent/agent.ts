@@ -7,6 +7,7 @@ import { Instance } from "../project/instance"
 import { Truncate } from "../tool/truncation"
 import { Auth } from "../auth"
 import { ProviderTransform } from "../provider/transform"
+import SUPERVISOR_PROMPT from "../supervisor/prompt.txt"
 
 import PROMPT_GENERATE from "./generate.txt"
 import PROMPT_COMPACTION from "./prompt/compaction.txt"
@@ -149,6 +150,29 @@ export namespace Agent {
         ),
         description: `Fast agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. "src/components/**/*.tsx"), search code for keywords (eg. "API endpoints"), or answer questions about the codebase (eg. "how do API endpoints work?"). When calling this agent, specify the desired thoroughness level: "quick" for basic searches, "medium" for moderate exploration, or "very thorough" for comprehensive analysis across multiple locations and naming conventions.`,
         prompt: PROMPT_EXPLORE,
+        options: {},
+        mode: "subagent",
+        native: true,
+      },
+      supervisor: {
+        name: "supervisor",
+        description: "Aegis Supervisor — reviews code changes for security, convention, and quality issues. Runs in background to validate agent output.",
+        prompt: SUPERVISOR_PROMPT,
+        permission: PermissionNext.merge(
+          defaults,
+          PermissionNext.fromConfig({
+            "*": "deny",
+            grep: "allow",
+            glob: "allow",
+            list: "allow",
+            read: "allow",
+            codesearch: "allow",
+            external_directory: {
+              [Truncate.GLOB]: "allow",
+            },
+          }),
+          user,
+        ),
         options: {},
         mode: "subagent",
         native: true,
