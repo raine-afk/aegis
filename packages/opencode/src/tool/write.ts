@@ -12,6 +12,7 @@ import { Filesystem } from "../util/filesystem"
 import { Instance } from "../project/instance"
 import { trimDiff } from "./edit"
 import { assertExternalDirectory } from "./external-directory"
+import { SupervisorHooks } from "../supervisor/hooks"
 
 const MAX_DIAGNOSTICS_PER_FILE = 20
 const MAX_PROJECT_DIAGNOSTICS_FILES = 5
@@ -53,6 +54,13 @@ export const WriteTool = Tool.define("write", {
     FileTime.read(ctx.sessionID, filepath)
 
     let output = "Wrote file successfully."
+
+    // Supervisor review — analyze written content for issues
+    const review = SupervisorHooks.reviewWrite(filepath, params.content)
+    if (review.findings.length > 0) {
+      output += "\n\n" + (review.intervention || "")
+    }
+
     await LSP.touchFile(filepath, true)
     const diagnostics = await LSP.diagnostics()
     const normalizedFilepath = Filesystem.normalizePath(filepath)

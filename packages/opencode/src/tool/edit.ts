@@ -17,6 +17,7 @@ import { Filesystem } from "../util/filesystem"
 import { Instance } from "../project/instance"
 import { Snapshot } from "@/snapshot"
 import { assertExternalDirectory } from "./external-directory"
+import { SupervisorHooks } from "../supervisor/hooks"
 
 const MAX_DIAGNOSTICS_PER_FILE = 20
 
@@ -130,6 +131,18 @@ export const EditTool = Tool.define("edit", {
     })
 
     let output = "Edit applied successfully."
+
+    // Supervisor review — analyze the edited file content
+    try {
+      const editedContent = await Bun.file(filePath).text()
+      const review = SupervisorHooks.reviewWrite(filePath, editedContent)
+      if (review.findings.length > 0) {
+        output += "\n\n" + (review.intervention || "")
+      }
+    } catch {
+      // Don't break the edit if supervisor fails
+    }
+
     await LSP.touchFile(filePath, true)
     const diagnostics = await LSP.diagnostics()
     const normalizedFilePath = Filesystem.normalizePath(filePath)
