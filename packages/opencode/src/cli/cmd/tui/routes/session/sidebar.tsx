@@ -1,5 +1,5 @@
 import { useSync } from "@tui/context/sync"
-import { createMemo, For, Show, Switch, Match } from "solid-js"
+import { createMemo, For, Show, Switch, Match, createSignal, onMount, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useTheme } from "../../context/theme"
 import { Locale } from "@/util/locale"
@@ -11,6 +11,7 @@ import { useKeybind } from "../../context/keybind"
 import { useDirectory } from "../../context/directory"
 import { useKV } from "../../context/kv"
 import { TodoItem } from "../../component/todo-item"
+import { getSessionFindings } from "@/supervisor/event"
 
 export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
   const sync = useSync()
@@ -25,7 +26,26 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
     diff: true,
     todo: true,
     lsp: true,
+    supervisor: true,
   })
+
+  // Poll supervisor findings every 2 seconds
+  const [supervisorFindings, setSupervisorFindings] = createSignal(getSessionFindings())
+  let svInterval: ReturnType<typeof setInterval>
+  onMount(() => {
+    svInterval = setInterval(() => setSupervisorFindings(getSessionFindings()), 2000)
+  })
+  onCleanup(() => clearInterval(svInterval))
+
+  const supervisorTotal = createMemo(() =>
+    supervisorFindings().reduce((sum, e) => sum + e.findings.length, 0),
+  )
+  const supervisorCritical = createMemo(() =>
+    supervisorFindings().reduce(
+      (sum, e) => sum + e.findings.filter((f) => f.severity === "critical").length,
+      0,
+    ),
+  )
 
   // Sort MCP servers alphabetically for consistent display order
   const mcpEntries = createMemo(() => Object.entries(sync.data.mcp).sort(([a], [b]) => a.localeCompare(b)))
@@ -202,6 +222,53 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
                 </For>
               </Show>
             </box>
+            <Show when={supervisorTotal() > 0}>
+              <box>
+                <box
+                  flexDirection="row"
+                  gap={1}
+                  onMouseDown={() => setExpanded("supervisor", !expanded.supervisor)}
+                >
+                  <text fg={theme.text}>{expanded.supervisor ? "▼" : "▶"}</text>
+                  <text fg={theme.text}>
+                    <b>🛡️ Supervisor</b>
+                    <Show when={!expanded.supervisor}>
+                      <span style={{ fg: supervisorCritical() > 0 ? theme.error : theme.warning }}>
+                        {" "}
+                        ({supervisorTotal()} finding{supervisorTotal() !== 1 ? "s" : ""})
+                      </span>
+                    </Show>
+                  </text>
+                </box>
+                <Show when={expanded.supervisor}>
+                  <For each={supervisorFindings().slice().reverse()}>
+                    {(entry) => (
+                      <For each={entry.findings}>
+                        {(finding) => (
+                          <box flexDirection="row" gap={1}>
+                            <text
+                              flexShrink={0}
+                              style={{
+                                fg: finding.severity === "critical"
+                                  ? theme.error
+                                  : finding.severity === "warning"
+                                    ? theme.warning
+                                    : theme.textMuted,
+                              }}
+                            >
+                              {finding.severity === "critical" ? "🔴" : finding.severity === "warning" ? "🟡" : "🔵"}
+                            </text>
+                            <text fg={theme.textMuted} wrapMode="word">
+                              {finding.message}
+                            </text>
+                          </box>
+                        )}
+                      </For>
+                    )}
+                  </For>
+                </Show>
+              </box>
+            </Show>
             <Show when={todo().length > 0 && todo().some((t) => t.status !== "completed")}>
               <box>
                 <box

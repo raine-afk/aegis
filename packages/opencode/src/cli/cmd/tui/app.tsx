@@ -29,6 +29,7 @@ import { FrecencyProvider } from "./component/prompt/frecency"
 import { PromptStashProvider } from "./component/prompt/stash"
 import { DialogAlert } from "./ui/dialog-alert"
 import { ToastProvider, useToast } from "./ui/toast"
+import { SupervisorHooks } from "@/supervisor/hooks"
 import { ExitProvider, useExit } from "./context/exit"
 import { Session as SessionApi } from "@/session"
 import { TuiEvent } from "./event"
@@ -568,6 +569,38 @@ function App() {
         aliases: ["quit", "q"],
       },
       onSelect: () => exit(),
+      category: "System",
+    },
+    {
+      title: "Initialize Aegis Supervisor",
+      value: "supervisor.init",
+      slash: {
+        name: "supervisor",
+        aliases: ["aegis", "sv"],
+      },
+      onSelect: async (dialog) => {
+        dialog.clear()
+        toast.show({
+          variant: "info",
+          message: "🛡️ Initializing Aegis Supervisor...",
+          duration: 3000,
+        })
+        try {
+          await SupervisorHooks.init()
+          const findings = SupervisorHooks.getFindings()
+          toast.show({
+            variant: "info",
+            message: `🛡️ Aegis Supervisor active — monitoring writes and edits`,
+            duration: 5000,
+          })
+        } catch (e) {
+          toast.show({
+            variant: "error",
+            message: `Supervisor init failed: ${e}`,
+            duration: 5000,
+          })
+        }
+      },
       category: "System",
     },
     {
