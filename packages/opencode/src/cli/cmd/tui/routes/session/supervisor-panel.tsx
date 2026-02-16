@@ -1,15 +1,16 @@
 import { createMemo, For, Show, createSignal, onMount, onCleanup } from "solid-js"
 import { useTheme } from "../../context/theme"
-import { getSessionFindings } from "../../../../../supervisor/event"
+import { useSDK } from "../../context/sdk"
 
 export function SupervisorPanel() {
   const { theme } = useTheme()
+  const sdk = useSDK()
 
   // Poll supervisor findings every 2 seconds
-  const [supervisorFindings, setSupervisorFindings] = createSignal(getSessionFindings())
+  const [supervisorFindings, setSupervisorFindings] = createSignal<Awaited<ReturnType<typeof sdk.client.supervisor.findings>>>([])
   let svInterval: ReturnType<typeof setInterval>
   onMount(() => {
-    svInterval = setInterval(() => setSupervisorFindings(getSessionFindings()), 2000)
+    svInterval = setInterval(async () => setSupervisorFindings(await sdk.client.supervisor.findings()), 2000)
   })
   onCleanup(() => clearInterval(svInterval))
 

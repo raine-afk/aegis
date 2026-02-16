@@ -11,11 +11,12 @@ import { useKeybind } from "../../context/keybind"
 import { useDirectory } from "../../context/directory"
 import { useKV } from "../../context/kv"
 import { TodoItem } from "../../component/todo-item"
-import { getSessionFindings } from "../../../../../supervisor/event"
+import { useSDK } from "../../context/sdk"
 
 export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
   const sync = useSync()
   const { theme } = useTheme()
+  const sdk = useSDK()
   const session = createMemo(() => sync.session.get(props.sessionID)!)
   const diff = createMemo(() => sync.data.session_diff[props.sessionID] ?? [])
   const todo = createMemo(() => sync.data.todo[props.sessionID] ?? [])
@@ -30,10 +31,10 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
   })
 
   // Poll supervisor findings every 2 seconds
-  const [supervisorFindings, setSupervisorFindings] = createSignal(getSessionFindings())
+  const [supervisorFindings, setSupervisorFindings] = createSignal<Awaited<ReturnType<typeof sdk.client.supervisor.findings>>>([])
   let svInterval: ReturnType<typeof setInterval>
   onMount(() => {
-    svInterval = setInterval(() => setSupervisorFindings(getSessionFindings()), 2000)
+    svInterval = setInterval(async () => setSupervisorFindings(await sdk.client.supervisor.findings()), 2000)
   })
   onCleanup(() => clearInterval(svInterval))
 
