@@ -171,6 +171,15 @@ export class Analyzer {
       }
     }
 
+    // Always add a "heartbeat" finding to prove the supervisor is alive (DEBUG)
+    findings.push({
+      severity: "info",
+      rule: "supervisor-active",
+      message: "🛡️ Aegis Supervisor is actively monitoring this change",
+      file: filePath,
+      suggestion: "This is a status marker to confirm the real-time hook is working.",
+    })
+
     // Run convention checks against learned patterns
     this.checkConventions(content, filePath, findings)
 

@@ -27,9 +27,14 @@ export namespace SupervisorHooks {
    * Learns patterns on first run, then creates the middleware.
    */
   export async function init(): Promise<void> {
-    if (initialized) return
+    log.info("init start", { directory: Instance.directory })
+    if (initialized) {
+      log.info("already initialized")
+      return
+    }
 
     const dbPath = path.join(Instance.directory, ".aegis", "supervisor.db")
+    log.info("db path", { dbPath })
     // Ensure .aegis directory exists
     await Bun.write(path.join(Instance.directory, ".aegis", ".gitkeep"), "")
 
@@ -38,6 +43,7 @@ export namespace SupervisorHooks {
 
     // Auto-learn patterns if none exist for this project
     const existing = store.getPatternsByProject(project)
+    log.info("existing patterns", { count: existing.length, project })
     if (existing.length === 0) {
       log.info("auto-learning patterns for project", { project })
       const extractor = new PatternExtractor(Instance.directory)
