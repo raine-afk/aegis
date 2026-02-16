@@ -8,9 +8,17 @@
       "options": {},
     },
   },
+  "agent": {
+    "supervisor": {
+      "model": "google-antigravity/claude-opus-4-6-thinking"
+    },
+    "build": {
+      "model": "google-antigravity/claude-opus-4-6-thinking"
+    }
+  },
   "mcp": {},
   "tools": {
     "github-triage": false,
     "github-pr-search": false,
-  },
+  }
 }
