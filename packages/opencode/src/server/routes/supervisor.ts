@@ -21,6 +21,7 @@ const FindingsEntrySchema = z.object({
 
 export const SupervisorRoutes = lazy(() =>
   new Hono()
+    .get("/", (c) => c.redirect("/findings", 302))
     .get(
       "/findings",
       describeRoute({

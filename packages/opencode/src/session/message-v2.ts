@@ -673,11 +673,11 @@ export namespace MessageV2 {
             assistantMessage.parts.push({
               type: "reasoning",
               text: part.text,
-              ...(differentModel ? {} : { providerMetadata: part.metadata }),
-              // @ts-ignore - signature is required for reasoning models like gemini
-              // we always include it if available, as even different models from the same
-              // provider may require it to validate history
-              signature: part.metadata?.signature,
+              ...(differentModel
+                ? part.metadata?.signature
+                  ? { providerMetadata: { signature: part.metadata.signature } }
+                  : {}
+                : { providerMetadata: part.metadata }),
             })
           }
         }

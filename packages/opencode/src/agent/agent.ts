@@ -158,6 +158,10 @@ export namespace Agent {
         name: "supervisor",
         description: "Aegis Supervisor — reviews code changes for security, convention, and quality issues. Runs in background to validate agent output.",
         prompt: SUPERVISOR_PROMPT,
+        model: {
+          modelID: "MiniMax-M2.5",
+          providerID: "minimax",
+        },
         permission: PermissionNext.merge(
           defaults,
           PermissionNext.fromConfig({

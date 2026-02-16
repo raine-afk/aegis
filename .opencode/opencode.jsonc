@@ -10,10 +10,10 @@
   },
   "agent": {
     "supervisor": {
-      "model": "google-antigravity/claude-opus-4-6-thinking"
+      "model": "minimax/MiniMax-M2.5"
     },
     "build": {
-      "model": "google-antigravity/claude-opus-4-6-thinking"
+      "model": "minimax/MiniMax-M2.5"
     }
   },
   "mcp": {},
