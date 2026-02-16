@@ -10,10 +10,10 @@
   },
   "agent": {
     "supervisor": {
-      "model": "minimax/MiniMax-M2.5"
+      "model": "kimi/kimi-k2.5"
     },
     "build": {
-      "model": "minimax/MiniMax-M2.5"
+      "model": "kimi/kimi-k2.5"
     }
   },
   "mcp": {},

@@ -20,8 +20,9 @@ import { DialogHelp } from "./ui/dialog-help"
 import { CommandProvider, useCommandDialog } from "@tui/component/dialog-command"
 import { DialogAgent } from "@tui/component/dialog-agent"
 import { DialogSessionList } from "@tui/component/dialog-session-list"
-import { KeybindProvider } from "@tui/context/keybind"
+import { KeybindProvider, useKeybind } from "@tui/context/keybind"
 import { ThemeProvider, useTheme } from "@tui/context/theme"
+import { SupervisorPanel } from "./routes/session/supervisor-panel"
 import { Home } from "@tui/routes/home"
 import { Session } from "@tui/routes/session"
 import { PromptHistoryProvider } from "./component/prompt/history"
@@ -211,8 +212,16 @@ function App() {
   const sync = useSync()
   const exit = useExit()
   const promptRef = usePromptRef()
+  const keybind = useKeybind()
+  const [supervisorPanelVisible, setSupervisorPanelVisible] = createSignal(false)
 
   useKeyboard((evt) => {
+    const parsed = keybind.parse(evt)
+    if (parsed.leader && parsed.name === "v") {
+      setSupervisorPanelVisible((v) => !v)
+      return
+    }
+
     if (!Flag.OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT) return
     if (!renderer.getSelection()) return
 
@@ -533,6 +542,18 @@ function App() {
       category: "System",
     },
     {
+      title: "Toggle Supervisor UI",
+      value: "supervisor.ui.toggle",
+      slash: {
+        name: "supervisor-ui",
+      },
+      onSelect: (dialog) => {
+        setSupervisorPanelVisible(!supervisorPanelVisible())
+        dialog.clear()
+      },
+      category: "System",
+    },
+    {
       title: "Toggle appearance",
       value: "theme.switch_mode",
       onSelect: (dialog) => {
@@ -777,14 +798,21 @@ function App() {
       }}
       onMouseUp={Flag.OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT ? undefined : () => Selection.copy(renderer, toast)}
     >
-      <Switch>
-        <Match when={route.data.type === "home"}>
-          <Home />
-        </Match>
-        <Match when={route.data.type === "session"}>
-          <Session />
-        </Match>
-      </Switch>
+      <box flexDirection="row" width="100%" height="100%">
+        <box flexGrow={1}>
+          <Switch>
+            <Match when={route.data.type === "home"}>
+              <Home />
+            </Match>
+            <Match when={route.data.type === "session"}>
+              <Session />
+            </Match>
+          </Switch>
+        </box>
+        <Show when={supervisorPanelVisible()}>
+          <SupervisorPanel />
+        </Show>
+      </box>
     </box>
   )
 }
