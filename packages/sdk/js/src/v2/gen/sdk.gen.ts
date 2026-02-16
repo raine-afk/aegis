@@ -141,6 +141,9 @@ import type {
   SessionUpdateErrors,
   SessionUpdateResponses,
   SubtaskPartInput,
+  SupervisorClearFindingsResponses,
+  SupervisorFindingsResponses,
+  SupervisorInitResponses,
   TextPartInput,
   ToolIdsErrors,
   ToolIdsResponses,
@@ -2953,6 +2956,65 @@ export class Tui extends HeyApiClient {
   }
 }
 
+export class Supervisor extends HeyApiClient {
+  /**
+   * Initialize supervisor
+   *
+   * Initialize the supervisor for the current project context.
+   */
+  public init<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
+    return (options?.client ?? this.client).post<SupervisorInitResponses, unknown, ThrowOnError>({
+      url: "/supervisor/init",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Clear supervisor findings
+   *
+   * Clear all supervisor findings from the current session.
+   */
+  public clearFindings<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
+    return (options?.client ?? this.client).delete<SupervisorClearFindingsResponses, unknown, ThrowOnError>({
+      url: "/supervisor/findings",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get supervisor findings
+   *
+   * Get all supervisor findings from the current session.
+   */
+  public findings<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
+    return (options?.client ?? this.client).get<SupervisorFindingsResponses, unknown, ThrowOnError>({
+      url: "/supervisor/findings",
+      ...options,
+      ...params,
+    })
+  }
+}
+
 export class Instance extends HeyApiClient {
   /**
    * Dispose instance
@@ -3274,6 +3336,11 @@ export class OpencodeClient extends HeyApiClient {
   private _tui?: Tui
   get tui(): Tui {
     return (this._tui ??= new Tui({ client: this.client }))
+  }
+
+  private _supervisor?: Supervisor
+  get supervisor(): Supervisor {
+    return (this._supervisor ??= new Supervisor({ client: this.client }))
   }
 
   private _instance?: Instance

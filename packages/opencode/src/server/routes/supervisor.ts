@@ -2,6 +2,7 @@ import { Hono } from "hono"
 import { describeRoute, resolver } from "hono-openapi"
 import z from "zod"
 import { getSessionFindings, clearSessionFindings } from "../../supervisor/event"
+import { SupervisorHooks } from "../../supervisor/hooks"
 import { lazy } from "../../util/lazy"
 
 const FindingSchema = z.object({
@@ -22,6 +23,28 @@ const FindingsEntrySchema = z.object({
 export const SupervisorRoutes = lazy(() =>
   new Hono()
     .get("/", (c) => c.redirect("/findings", 302))
+    .post(
+      "/init",
+      describeRoute({
+        summary: "Initialize supervisor",
+        description: "Initialize the supervisor for the current project context.",
+        operationId: "supervisor.init",
+        responses: {
+          200: {
+            description: "Supervisor initialized successfully",
+            content: {
+              "application/json": {
+                schema: resolver(z.object({ ok: z.boolean() })),
+              },
+            },
+          },
+        },
+      }),
+      async (c) => {
+        await SupervisorHooks.init()
+        return c.json({ ok: true })
+      },
+    )
     .get(
       "/findings",
       describeRoute({

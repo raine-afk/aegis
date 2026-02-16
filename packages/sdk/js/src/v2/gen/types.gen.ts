@@ -692,6 +692,33 @@ export type EventFileWatcherUpdated = {
   }
 }
 
+export type EventSupervisorFinding = {
+  type: "supervisor.finding"
+  properties: {
+    file: string
+    findings: Array<{
+      severity: "critical" | "warning" | "info"
+      rule: string
+      message: string
+      file: string
+      line?: number
+      suggestion?: string
+    }>
+    intervention: string | null
+    shouldBlock: boolean
+  }
+}
+
+export type EventSupervisorStatus = {
+  type: "supervisor.status"
+  properties: {
+    enabled: boolean
+    patternCount: number
+    totalFindings: number
+    criticalCount: number
+  }
+}
+
 export type Todo = {
   /**
    * Brief description of the task
@@ -965,6 +992,8 @@ export type Event =
   | EventQuestionRejected
   | EventSessionCompacted
   | EventFileWatcherUpdated
+  | EventSupervisorFinding
+  | EventSupervisorStatus
   | EventTodoUpdated
   | EventTuiPromptAppend
   | EventTuiCommandExecute
@@ -4850,6 +4879,71 @@ export type TuiControlResponseResponses = {
 }
 
 export type TuiControlResponseResponse = TuiControlResponseResponses[keyof TuiControlResponseResponses]
+
+export type SupervisorInitData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/supervisor/init"
+}
+
+export type SupervisorInitResponses = {
+  /**
+   * Supervisor initialized successfully
+   */
+  200: {
+    ok: boolean
+  }
+}
+
+export type SupervisorInitResponse = SupervisorInitResponses[keyof SupervisorInitResponses]
+
+export type SupervisorClearFindingsData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/supervisor/findings"
+}
+
+export type SupervisorClearFindingsResponses = {
+  /**
+   * Findings cleared
+   */
+  200: unknown
+}
+
+export type SupervisorFindingsData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/supervisor/findings"
+}
+
+export type SupervisorFindingsResponses = {
+  /**
+   * List of supervisor findings
+   */
+  200: Array<{
+    file: string
+    findings: Array<{
+      severity: "critical" | "warning" | "info"
+      rule: string
+      message: string
+      file: string
+      line?: number
+      suggestion?: string
+    }>
+    timestamp: number
+  }>
+}
+
+export type SupervisorFindingsResponse = SupervisorFindingsResponses[keyof SupervisorFindingsResponses]
 
 export type InstanceDisposeData = {
   body?: never

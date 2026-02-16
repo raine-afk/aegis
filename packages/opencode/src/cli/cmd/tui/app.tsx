@@ -586,7 +586,7 @@ function App() {
           duration: 3000,
         })
         try {
-          await SupervisorHooks.init()
+          await sdk.client.supervisor.init()
           const findings = SupervisorHooks.getFindings()
           toast.show({
             variant: "info",
